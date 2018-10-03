@@ -1,2 +1,2 @@
-# SYDE358
+# ECE358
 computer networks
