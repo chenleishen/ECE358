@@ -7,8 +7,7 @@ const float T = 10;
 const float len = 12000.0;
 const float alpha = 75.0;
 const float C = 1000000.0;
-const float rho = 0.25;
-const float K = 5;
+float K, rho;
 
 queue<float> generate_observation_times(float alpha) {
   queue<float> observation_times_queue;
@@ -39,13 +38,6 @@ queue<float>* generate_arrival_times (float lambda, float packet_lambda) {
     packet_len_queue.push (packet_len);
 
     float current_packet_service_time = packet_len/C;
-
-    // cout << "arrival_time" << endl;
-    // cout << arrival_time << endl;
-    // cout << "packet_len" << endl;
-    // cout << packet_len << endl;
-    // cout << "departure_time" << endl;
-    // cout << departure_time << endl;
 
   } while (arrival_time < T);
 
@@ -115,174 +107,40 @@ void departure_procedure (
   num_packet_in_buffer -= 1;
 }
 
-int main()
-{
-    float lambda = rho * C / len;
-    float avg_num_packets;
-    float avg_sojourn_time;
-    float p_idle;
-    float p_loss;
+void run(float rho, float K) {
+  float lambda = rho * C / len;
+  float avg_num_packets;
+  float avg_sojourn_time;
+  float p_idle;
+  float p_loss;
 
-    int num_of_arrivals = 0;
-    int num_of_departures = 0;
-    int num_of_observations = 0;
-    int num_packet_in_buffer = 0;
-    int tot_num_packet_in_buffer = 0;
-    int tot_num_dropped = 0;
+  int num_of_arrivals = 0;
+  int num_of_departures = 0;
+  int num_of_observations = 0;
+  int num_packet_in_buffer = 0;
+  int tot_num_packet_in_buffer = 0;
+  int tot_num_dropped = 0;
 
-    // cout << "observation" << endl;
-    queue<float> observation_times_queue = generate_observation_times(alpha);
-    // cout << "arrival" << endl;
-    queue<float> * arrival_times_and_packet_len = generate_arrival_times(lambda, 1/len);
-    queue<float> arrival_times_queue = arrival_times_and_packet_len[0];
-    queue<float> packet_len_queue = arrival_times_and_packet_len[1];
+  queue<float> observation_times_queue = generate_observation_times(alpha);
+  queue<float> * arrival_times_and_packet_len = generate_arrival_times(lambda, 1/len);
+  queue<float> arrival_times_queue = arrival_times_and_packet_len[0];
+  queue<float> packet_len_queue = arrival_times_and_packet_len[1];
 
-    // cout << "arrival size" << endl;
-    // cout << arrival_times_queue.size() << endl;
-    // cout << "observation size" << endl;
-    // cout << observation_times_queue.size() << endl;
+  queue<float> departure_times_queue;
 
-    queue<float> departure_times_queue;
+  while (!observation_times_queue.empty())
+  {
+    bool observation_not_empty = !observation_times_queue.empty();
+    bool arrival_not_empty = !arrival_times_queue.empty();
+    bool departure_not_empty = !departure_times_queue.empty();
 
-    while (!observation_times_queue.empty())
+    if (observation_not_empty && arrival_not_empty && departure_not_empty)
     {
-      bool observation_not_empty = !observation_times_queue.empty();
-      bool arrival_not_empty = !arrival_times_queue.empty();
-      bool departure_not_empty = !departure_times_queue.empty();
+      float arrival_time = arrival_times_queue.front();
+      float observation_time = observation_times_queue.front();
+      float departure_time = departure_times_queue.front();
 
-      // cout << "arrival_time" << endl;
-      // cout << arrival_time << endl;
-      // cout << "packet_len" << endl;
-      // cout << packet_len << endl;
-      // cout << "departure_time" << endl;
-      // cout << departure_time << endl;
-
-      // cout << "arrival_times_queue" << endl;
-      // cout << arrival_times_queue.size() << endl;
-      // cout << "observation_times_queue" << endl;
-      // cout << observation_times_queue.size() << endl;
-      // cout << "departure_times_queue" << endl;
-      // cout << departure_times_queue.size() << endl;
-
-      if (observation_not_empty && arrival_not_empty && departure_not_empty)
-      {
-        float arrival_time = arrival_times_queue.front();
-        float observation_time = observation_times_queue.front();
-        float departure_time = departure_times_queue.front();
-
-        if (arrival_time <= observation_time && arrival_time <= departure_time) {
-          arrival_procedure(
-            arrival_times_queue,
-            num_of_arrivals,
-            num_packet_in_buffer,
-            tot_num_dropped,
-            packet_len_queue,
-            departure_times_queue
-          );
-
-        } else if (observation_time <= arrival_time && observation_time <= departure_time) {
-          observation_procedure (
-            observation_times_queue,
-            num_of_observations,
-            num_of_arrivals,
-            num_of_departures,
-            tot_num_packet_in_buffer,
-            num_packet_in_buffer
-          );
-
-        } else if (departure_time <= arrival_time && departure_time <= observation_time){
-          departure_procedure(
-            departure_times_queue,
-            num_of_departures,
-            num_packet_in_buffer
-          );
-        }
-      }
-      else if (observation_not_empty && arrival_not_empty) {
-        float arrival_time = arrival_times_queue.front();
-        float observation_time = observation_times_queue.front();
-
-        if (arrival_time <= observation_time) {
-          arrival_procedure(
-            arrival_times_queue,
-            num_of_arrivals,
-            num_packet_in_buffer,
-            tot_num_dropped,
-            packet_len_queue,
-            departure_times_queue
-          );
-
-        } else {
-          observation_procedure (
-            observation_times_queue,
-            num_of_observations,
-            num_of_arrivals,
-            num_of_departures,
-            tot_num_packet_in_buffer,
-            num_packet_in_buffer
-          );
-
-        }
-      } else if (arrival_not_empty && departure_not_empty) {
-        float arrival_time = arrival_times_queue.front();
-        float departure_time = departure_times_queue.front();
-
-        if (arrival_time <= departure_time) {
-          arrival_procedure(
-            arrival_times_queue,
-            num_of_arrivals,
-            num_packet_in_buffer,
-            tot_num_dropped,
-            packet_len_queue,
-            departure_times_queue
-          );
-
-        } else {
-          departure_procedure(
-            departure_times_queue,
-            num_of_departures,
-            num_packet_in_buffer
-          );
-        }
-      } else if (departure_not_empty && observation_not_empty) {
-        float observation_time = observation_times_queue.front();
-        float departure_time = departure_times_queue.front();
-
-        if (observation_time <= departure_time) {
-          observation_procedure (
-            observation_times_queue,
-            num_of_observations,
-            num_of_arrivals,
-            num_of_departures,
-            tot_num_packet_in_buffer,
-            num_packet_in_buffer
-          );
-
-        } else {
-          departure_procedure(
-            departure_times_queue,
-            num_of_departures,
-            num_packet_in_buffer
-          );
-        }
-      } else if (observation_not_empty) {
-          observation_procedure (
-            observation_times_queue,
-            num_of_observations,
-            num_of_arrivals,
-            num_of_departures,
-            tot_num_packet_in_buffer,
-            num_packet_in_buffer
-          );
-
-      } else if (departure_not_empty) {
-        departure_procedure(
-          departure_times_queue,
-          num_of_departures,
-          num_packet_in_buffer
-        );
-
-      } else {
+      if (arrival_time <= observation_time && arrival_time <= departure_time) {
         arrival_procedure(
           arrival_times_queue,
           num_of_arrivals,
@@ -291,21 +149,181 @@ int main()
           packet_len_queue,
           departure_times_queue
         );
+
+      } else if (observation_time <= arrival_time && observation_time <= departure_time) {
+        observation_procedure (
+          observation_times_queue,
+          num_of_observations,
+          num_of_arrivals,
+          num_of_departures,
+          tot_num_packet_in_buffer,
+          num_packet_in_buffer
+        );
+
+      } else if (departure_time <= arrival_time && departure_time <= observation_time){
+        departure_procedure(
+          departure_times_queue,
+          num_of_departures,
+          num_packet_in_buffer
+        );
       }
     }
+    else if (observation_not_empty && arrival_not_empty) {
+      float arrival_time = arrival_times_queue.front();
+      float observation_time = observation_times_queue.front();
 
-    // cout << "num_of_arrivals" << endl;
-    // cout << num_of_arrivals << endl;
-    // cout << "num_of_observations" << endl;
-    // cout << num_of_observations << endl;
-    // cout << "num_of_departures" << endl;
-    // cout << num_of_departures << endl;
+      if (arrival_time <= observation_time) {
+        arrival_procedure(
+          arrival_times_queue,
+          num_of_arrivals,
+          num_packet_in_buffer,
+          tot_num_dropped,
+          packet_len_queue,
+          departure_times_queue
+        );
 
-    cout << "average number of packets in buffer" << endl;
-    cout << (double)tot_num_packet_in_buffer/num_of_observations << endl;
+      } else {
+        observation_procedure (
+          observation_times_queue,
+          num_of_observations,
+          num_of_arrivals,
+          num_of_departures,
+          tot_num_packet_in_buffer,
+          num_packet_in_buffer
+        );
 
-    cout << "proportion of idle time" << endl;
-    cout << (double)tot_num_dropped/num_of_observations << endl;
+      }
+    } else if (arrival_not_empty && departure_not_empty) {
+      float arrival_time = arrival_times_queue.front();
+      float departure_time = departure_times_queue.front();
 
-    return 0;
+      if (arrival_time <= departure_time) {
+        arrival_procedure(
+          arrival_times_queue,
+          num_of_arrivals,
+          num_packet_in_buffer,
+          tot_num_dropped,
+          packet_len_queue,
+          departure_times_queue
+        );
+
+      } else {
+        departure_procedure(
+          departure_times_queue,
+          num_of_departures,
+          num_packet_in_buffer
+        );
+      }
+    } else if (departure_not_empty && observation_not_empty) {
+      float observation_time = observation_times_queue.front();
+      float departure_time = departure_times_queue.front();
+
+      if (observation_time <= departure_time) {
+        observation_procedure (
+          observation_times_queue,
+          num_of_observations,
+          num_of_arrivals,
+          num_of_departures,
+          tot_num_packet_in_buffer,
+          num_packet_in_buffer
+        );
+
+      } else {
+        departure_procedure(
+          departure_times_queue,
+          num_of_departures,
+          num_packet_in_buffer
+        );
+      }
+    } else if (observation_not_empty) {
+        observation_procedure (
+          observation_times_queue,
+          num_of_observations,
+          num_of_arrivals,
+          num_of_departures,
+          tot_num_packet_in_buffer,
+          num_packet_in_buffer
+        );
+
+    } else if (departure_not_empty) {
+      departure_procedure(
+        departure_times_queue,
+        num_of_departures,
+        num_packet_in_buffer
+      );
+
+    } else {
+      arrival_procedure(
+        arrival_times_queue,
+        num_of_arrivals,
+        num_packet_in_buffer,
+        tot_num_dropped,
+        packet_len_queue,
+        departure_times_queue
+      );
+    }
+  }
+
+  cout << "K = " << K << "   "
+  << "rho = " << rho << "   "
+
+  // << "En = " << "   "
+  // << (double)tot_num_packet_in_buffer/num_of_observations << endl;
+
+  << "Pidle" << "   "
+  << (double)tot_num_dropped/num_of_observations << endl;
+
+}
+
+int main()
+{
+  // K = 5;
+  // for (float rho = 0.5; rho <= 1.5; rho += 0.1) {
+  //   run(rho, K);
+  // }
+  //
+  // K = 10;
+  // for (float rho = 0.5; rho <= 1.5; rho += 0.1) {
+  //   run(rho, K);
+  // }
+  //
+  // K = 40;
+  // for (float rho = 0.5; rho <= 1.5; rho += 0.1) {
+  //   run(rho, K);
+  // }
+
+  K = 5;
+  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+    run(rho, K);
+  }
+  for (float rho = 2; rho <= 5.1; rho += 0.2) {
+    run(rho, K);
+  }
+  for (float rho = 5; rho <= 10.1; rho += 0.4) {
+    run(rho, K);
+  }
+
+  K = 10;
+  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+    run(rho, K);
+  }
+  for (float rho = 2; rho <= 5.1; rho += 0.2) {
+    run(rho, K);
+  }
+  for (float rho = 5; rho <= 10.1; rho += 0.4) {
+    run(rho, K);
+  }
+
+  K = 40;
+  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+    run(rho, K);
+  }
+  for (float rho = 2; rho <= 5.1; rho += 0.2) {
+    run(rho, K);
+  }
+  for (float rho = 5; rho <= 10.1; rho += 0.4) {
+    run(rho, K);
+  }
+
+  return 0;
 }
