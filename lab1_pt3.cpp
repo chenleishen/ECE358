@@ -3,11 +3,9 @@
 #include "exp_distribution.h"
 using namespace std;
 
-const float T = 10;
+const float T = 11000;
 const float len = 12000.0;
-const float alpha = 75.0;
 const float C = 1000000.0;
-float K, rho;
 
 queue<float> generate_observation_times(float alpha) {
   queue<float> observation_times_queue;
@@ -54,24 +52,28 @@ void arrival_procedure (
   int &num_packet_in_buffer,
   int &tot_num_dropped,
   queue<float> &packet_len_queue,
-  queue<float> &departure_times_queue
+  queue<float> &departure_times_queue,
+  float K
 ) {
   float arrival_time = arrival_times_queue.front();
   arrival_times_queue.pop();
   num_of_arrivals += 1;
 
   if (num_packet_in_buffer >= K) {
+    // cout << K << endl;
+    // cout << "drop packet" <<endl;
     tot_num_dropped += 1;
     packet_len_queue.pop();
   } else {
+    // cout << "packet in buffer increase by 1" <<endl;
     num_packet_in_buffer += 1;
     float current_packet_service_time = packet_len_queue.front()/C;
     packet_len_queue.pop();
 
     if (!departure_times_queue.empty() &&
-      arrival_time <= departure_times_queue.front()) {
+      arrival_time <= departure_times_queue.back()) {
       float next_departure_time =
-      departure_times_queue.front() + current_packet_service_time;
+      departure_times_queue.back() + current_packet_service_time;
       departure_times_queue.push(next_departure_time);
     } else {
       float next_departure_time = arrival_time + current_packet_service_time;
@@ -93,7 +95,9 @@ void observation_procedure (
 
   if (num_of_arrivals > num_of_departures)
   {
+    // cout << num_packet_in_buffer << endl;
     tot_num_packet_in_buffer += num_packet_in_buffer;
+     // cout << num_packet_in_buffer << endl;
   }
 }
 
@@ -109,6 +113,7 @@ void departure_procedure (
 
 void run(float rho, float K) {
   float lambda = rho * C / len;
+  float alpha = lambda;
   float avg_num_packets;
   float avg_sojourn_time;
   float p_idle;
@@ -120,6 +125,8 @@ void run(float rho, float K) {
   int num_packet_in_buffer = 0;
   int tot_num_packet_in_buffer = 0;
   int tot_num_dropped = 0;
+
+  float tot_service_time = 0;
 
   queue<float> observation_times_queue = generate_observation_times(alpha);
   queue<float> * arrival_times_and_packet_len = generate_arrival_times(lambda, 1/len);
@@ -147,7 +154,7 @@ void run(float rho, float K) {
           num_packet_in_buffer,
           tot_num_dropped,
           packet_len_queue,
-          departure_times_queue
+          departure_times_queue, K
         );
 
       } else if (observation_time <= arrival_time && observation_time <= departure_time) {
@@ -179,7 +186,7 @@ void run(float rho, float K) {
           num_packet_in_buffer,
           tot_num_dropped,
           packet_len_queue,
-          departure_times_queue
+          departure_times_queue, K
         );
 
       } else {
@@ -204,7 +211,7 @@ void run(float rho, float K) {
           num_packet_in_buffer,
           tot_num_dropped,
           packet_len_queue,
-          departure_times_queue
+          departure_times_queue, K
         );
 
       } else {
@@ -259,71 +266,77 @@ void run(float rho, float K) {
         num_packet_in_buffer,
         tot_num_dropped,
         packet_len_queue,
-        departure_times_queue
+        departure_times_queue, K
       );
     }
   }
 
-  cout << "K = " << K << "   "
-  << "rho = " << rho << "   "
+  // cout << "K = "
+  //<< K << ",   "
+  // << "  "
+  cout << K << "," <<tot_num_packet_in_buffer << ", "
+  << num_of_observations << ", "
+  << rho << ", "
 
   // << "En = " << "   "
-  // << (double)tot_num_packet_in_buffer/num_of_observations << endl;
+  << (float)tot_num_packet_in_buffer/num_of_observations
 
-  << "Pidle" << "   "
-  << (double)tot_num_dropped/num_of_observations << endl;
+  << ", Ploss" << "   "
+  << (float)tot_num_dropped/num_of_arrivals << endl;
 
 }
 
 int main()
 {
-  // K = 5;
-  // for (float rho = 0.5; rho <= 1.5; rho += 0.1) {
-  //   run(rho, K);
-  // }
-  //
+  float K = 40;
+  for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
+    run(rho, K);
+  }
+
+  // run(1.5, 40);
+
   // K = 10;
-  // for (float rho = 0.5; rho <= 1.5; rho += 0.1) {
+  // for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
   //   run(rho, K);
   // }
   //
   // K = 40;
-  // for (float rho = 0.5; rho <= 1.5; rho += 0.1) {
+  // for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
   //   run(rho, K);
   // }
 
-  K = 5;
-  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
-    run(rho, K);
-  }
-  for (float rho = 2; rho <= 5.1; rho += 0.2) {
-    run(rho, K);
-  }
-  for (float rho = 5; rho <= 10.1; rho += 0.4) {
-    run(rho, K);
-  }
-
-  K = 10;
-  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
-    run(rho, K);
-  }
-  for (float rho = 2; rho <= 5.1; rho += 0.2) {
-    run(rho, K);
-  }
-  for (float rho = 5; rho <= 10.1; rho += 0.4) {
-    run(rho, K);
-  }
-
-  K = 40;
-  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
-    run(rho, K);
-  }
-  for (float rho = 2; rho <= 5.1; rho += 0.2) {
-    run(rho, K);
-  }
-  for (float rho = 5; rho <= 10.1; rho += 0.4) {
-    run(rho, K);
-  }
+  // K = 40;
+  // for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+  //   run(rho, K);
+  // }
+  // for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
+  //   run(rho, K);
+  // }
+  // for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
+  //   run(rho, K);
+  // }
+  //
+  // K = 10;
+  // for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+  //   run(rho, K);
+  // }
+  // for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
+  //   run(rho, K);
+  // }
+  // for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
+  //   run(rho, K);
+  // }
+  //
+  // K = 40;
+  // for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+  //   run(rho, K);
+  // }
+  // for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
+  //   run(rho, K);
+  // }
+  // for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
+  //   run(rho, K);
+  // }
 
   return 0;
 }
