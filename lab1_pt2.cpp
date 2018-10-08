@@ -13,7 +13,6 @@ queue<float> generate_observation_times(float alpha) {
   float observation_time = 0;
   do {
     observation_time += generate_exp_distribution_var(alpha);
-    // cout << time << endl;
     if (observation_time > T) break;
     observation_times_queue.push (observation_time);
   } while (observation_time < T);
@@ -28,7 +27,6 @@ queue<float>* generate_arrival_times (float lambda, float packet_lambda) {
 
   float arrival_time = 0;
   float departure_time;
-  float total_service_time = 0;
 
   do {
     arrival_time += generate_exp_distribution_var(lambda);
@@ -42,13 +40,11 @@ queue<float>* generate_arrival_times (float lambda, float packet_lambda) {
 
     float current_packet_service_time = packet_len/C;
 
-    if (arrival_time > 0 && total_service_time < arrival_time ) {
-      departure_time = arrival_time + current_packet_service_time;
+    if (!departure_times_queue.empty() && departure_times_queue.back() > arrival_time ) {
+      departure_time = departure_times_queue.back() + current_packet_service_time;
     } else {
-      departure_time = total_service_time + current_packet_service_time;
+      departure_time = arrival_time + current_packet_service_time;
     }
-
-    total_service_time = departure_time;
 
     departure_times_queue.push (departure_time);
 
@@ -77,7 +73,7 @@ void observation_procedure (
   int &num_of_observations,
   int num_of_arrivals,
   int num_of_departures,
-  int &tot_num_packet_in_buffer,
+  long int &tot_num_packet_in_buffer,
   int &tot_num_idle
 ) {
   observation_times_queue.pop();
@@ -85,7 +81,7 @@ void observation_procedure (
 
   if (num_of_arrivals > num_of_departures)
   {
-    tot_num_packet_in_buffer += num_of_arrivals - num_of_departures;
+    tot_num_packet_in_buffer += (num_of_arrivals - num_of_departures);
   }
 
   if (num_of_arrivals <= num_of_departures)
@@ -99,14 +95,13 @@ void run(float rho) {
   float lambda = rho * C / len;
   float alpha = lambda;
   float avg_num_packets;
-  float avg_sojourn_time;
   float p_idle;
-  float p_loss;
+  float e_n;
 
   int num_of_arrivals = 0;
   int num_of_departures = 0;
   int num_of_observations = 0;
-  int tot_num_packet_in_buffer = 0;
+  long int tot_num_packet_in_buffer = 0L;
   int tot_num_idle = 0;
 
   queue<float> observation_times_queue = generate_observation_times(alpha);
@@ -200,21 +195,24 @@ void run(float rho) {
 
   }
 
+  e_n = (float)tot_num_packet_in_buffer/num_of_observations;
+  p_idle = (float)tot_num_idle/num_of_observations;
+
   cout << "rho = "
   << rho
   << "    "
   << "En = "
-  << (double)tot_num_packet_in_buffer/num_of_observations
+  << e_n
   << "    "
   << "Pidle = "
-  << (double)tot_num_idle/num_of_observations << endl;
+  << p_idle << endl;
 };
 
 int main()
 {
-  // for (float rho = 0.25; rho <= 1.0; rho += 0.1) {
-  //   run(rho);
-  // }
+  for (float rho = 0.25; rho <= 1.0; rho += 0.1) {
+    run(rho);
+  }
   run(1.2);
   return 0;
 }

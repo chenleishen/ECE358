@@ -16,10 +16,10 @@ int main()
     }
 
     float mean = get_mean_exp_distr(exp_distribution);
-    float std_dev = get_std_dev_exp_distr(mean, exp_distribution);
+    float variance = get_variance_exp_distr(mean, exp_distribution);
 
     cout << "Mean is " << mean << endl;
-    cout << "Standard deviation is " << std_dev << endl;
+    cout << "Variance is " << variance << endl;
 
     return 0;
 }
