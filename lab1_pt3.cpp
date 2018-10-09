@@ -111,7 +111,7 @@ void departure_procedure (
   num_packet_in_buffer -= 1;
 }
 
-void run(float rho, float K) {
+void run(float rho, float K, bool show_e_n, bool show_p_loss) {
   float lambda = rho * C / len;
   float alpha = lambda;
   float avg_num_packets;
@@ -125,8 +125,6 @@ void run(float rho, float K) {
   int num_packet_in_buffer = 0;
   int tot_num_packet_in_buffer = 0;
   int tot_num_dropped = 0;
-
-  float tot_service_time = 0;
 
   queue<float> observation_times_queue = generate_observation_times(alpha);
   queue<float> * arrival_times_and_packet_len = generate_arrival_times(lambda, 1/len);
@@ -271,72 +269,79 @@ void run(float rho, float K) {
     }
   }
 
-  // cout << "K = "
-  //<< K << ",   "
-  // << "  "
-  cout << K << "," <<tot_num_packet_in_buffer << ", "
-  << num_of_observations << ", "
-  << rho << ", "
+  if (show_e_n == true) {
+    cout << "K = "
+    << K
+    << "   "
+    << "rho = "
+    << rho
+    << "   "
+    << "En = "
+    << (float)tot_num_packet_in_buffer/num_of_observations << endl;
+  }
 
-  // << "En = " << "   "
-  << (float)tot_num_packet_in_buffer/num_of_observations
-
-  << ", Ploss" << "   "
-  << (float)tot_num_dropped/num_of_arrivals << endl;
+  if (show_p_loss == true) {
+    cout << "K = "
+    << K
+    << "   "
+    << "rho = "
+    << rho
+    << "   "
+    << "P_loss = "
+    << (float)tot_num_dropped/num_of_arrivals << endl;
+  }
 
 }
 
 int main()
 {
-  float K = 40;
+  float K = 5;
   for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
-    run(rho, K);
+    run(rho, K, true, false);
   }
 
-  // run(1.5, 40);
+  K = 10;
+  for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
+    run(rho, K, true, false);
+  }
 
-  // K = 10;
-  // for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
-  //   run(rho, K);
-  // }
-  //
-  // K = 40;
-  // for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
-  //   run(rho, K);
-  // }
+  K = 40;
+  for (float rho = 0.5; rho <= 1.6; rho += 0.1) {
+    run(rho, K, true, false);
+  }
 
-  // K = 40;
-  // for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
-  //   run(rho, K);
-  // }
-  // for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
-  //   run(rho, K);
-  // }
-  // for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
-  //   run(rho, K);
-  // }
-  //
-  // K = 10;
-  // for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
-  //   run(rho, K);
-  // }
-  // for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
-  //   run(rho, K);
-  // }
-  // for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
-  //   run(rho, K);
-  // }
-  //
-  // K = 40;
-  // for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
-  //   run(rho, K);
-  // }
-  // for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
-  //   run(rho, K);
-  // }
-  // for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
-  //   run(rho, K);
-  // }
+  K = 5;
+  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+    run(rho, K, false, true);
+  }
+  for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
+    run(rho, K, false, true);
+  }
+  for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
+    run(rho, K, false, true);
+  }
+
+  K = 10;
+  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+    run(rho, K, false, true);
+  }
+  for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
+    run(rho, K, false, true);
+  }
+  for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
+    run(rho, K, false, true);
+  }
+
+  K = 40;
+  for (float rho = 0.4; rho <= 2.1; rho += 0.1) {
+    run(rho, K, false, true);
+  }
+  for (float rho = 2.2; rho <= 5.1; rho += 0.2) {
+    run(rho, K, false, true);
+  }
+  for (float rho = 5.4; rho <= 10.1; rho += 0.4) {
+    run(rho, K, false, true);
+  }
 
   return 0;
 }
