@@ -60,12 +60,9 @@ void arrival_procedure (
   num_of_arrivals += 1;
 
   if (num_packet_in_buffer >= K) {
-    // cout << K << endl;
-    // cout << "drop packet" <<endl;
     tot_num_dropped += 1;
     packet_len_queue.pop();
   } else {
-    // cout << "packet in buffer increase by 1" <<endl;
     num_packet_in_buffer += 1;
     float current_packet_service_time = packet_len_queue.front()/C;
     packet_len_queue.pop();
@@ -95,9 +92,7 @@ void observation_procedure (
 
   if (num_of_arrivals > num_of_departures)
   {
-    // cout << num_packet_in_buffer << endl;
     tot_num_packet_in_buffer += num_packet_in_buffer;
-     // cout << num_packet_in_buffer << endl;
   }
 }
 
@@ -114,9 +109,7 @@ void departure_procedure (
 void run(float rho, float K, bool show_e_n, bool show_p_loss) {
   float lambda = rho * C / len;
   float alpha = lambda;
-  float avg_num_packets;
-  float avg_sojourn_time;
-  float p_idle;
+  float e_n;
   float p_loss;
 
   int num_of_arrivals = 0;
@@ -269,6 +262,9 @@ void run(float rho, float K, bool show_e_n, bool show_p_loss) {
     }
   }
 
+  e_n = (float)tot_num_packet_in_buffer/num_of_observations;
+  p_loss = (float)tot_num_dropped/num_of_arrivals;
+
   if (show_e_n == true) {
     cout << "K = "
     << K
@@ -277,7 +273,7 @@ void run(float rho, float K, bool show_e_n, bool show_p_loss) {
     << rho
     << "   "
     << "En = "
-    << (float)tot_num_packet_in_buffer/num_of_observations << endl;
+    << e_n << endl;
   }
 
   if (show_p_loss == true) {
@@ -288,7 +284,7 @@ void run(float rho, float K, bool show_e_n, bool show_p_loss) {
     << rho
     << "   "
     << "P_loss = "
-    << (float)tot_num_dropped/num_of_arrivals << endl;
+    << p_loss << endl;
   }
 
 }

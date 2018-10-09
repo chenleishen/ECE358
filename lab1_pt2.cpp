@@ -94,9 +94,8 @@ void run(float rho) {
 
   float lambda = rho * C / len;
   float alpha = lambda;
-  float avg_num_packets;
-  float p_idle;
   float e_n;
+  float p_idle;
 
   int num_of_arrivals = 0;
   int num_of_departures = 0;
